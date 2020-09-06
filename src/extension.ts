@@ -4,7 +4,7 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as glob from 'glob';
-import * as ejs from 'ejs';
+import * as Velocity from 'velocityjs';
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -13,14 +13,20 @@ export function activate(context: vscode.ExtensionContext) {
 
 	const globalStoragePath: string = context.globalStoragePath;
 
+	console.log(globalStoragePath);
+
+	vscode.window.showInformationMessage(globalStoragePath);
+
 	if (!fs.existsSync(globalStoragePath)){
 		fs.mkdirSync(globalStoragePath);
 	}
 
 	const openTemplate = (fname: string) => {
-		var openPath = vscode.Uri.parse("file://" + globalStoragePath + '/' + fname);
+		var openPath = vscode.Uri.file(globalStoragePath + '/' + fname);
 		vscode.workspace.openTextDocument(openPath).then(doc => {
 			vscode.window.showTextDocument(doc);
+		}, (error: any) => {
+			console.error(error);
 		});
 	};
 
@@ -52,7 +58,7 @@ export function activate(context: vscode.ExtensionContext) {
 				'utf-8'
 			);
 
-			const renderedString = ejs.render(template, {
+			const renderedString = Velocity.render(template, {
 				name,
 			});
 
@@ -61,10 +67,14 @@ export function activate(context: vscode.ExtensionContext) {
 
 			await fs.promises.writeFile(
 				path.join(folder.fsPath, filename),
-				renderedString
+				renderedString.trim()
 			);
-
-			var openPath = vscode.Uri.parse("file://" + path.join(folder.fsPath, filename));
+			var openPath = vscode.Uri.file(path.join(folder.fsPath, filename));
+			vscode.workspace.openTextDocument(openPath).then(doc => {
+				vscode.window.showTextDocument(doc);
+			}, (error: any) => {
+				console.error(error);
+			});
 		}),
 		vscode.commands.registerCommand('create-file-from-template.createTemplate', async () => {
 			const filename = await vscode.window.showInputBox({
@@ -75,7 +85,7 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showInformationMessage('Canceled create!');
 				return;
 			}
-			await fs.promises.writeFile(globalStoragePath + '/' + filename, '// We are using EJS template, please check its document: https://ejs.co/');
+			await fs.promises.writeFile(globalStoragePath + '/' + filename, '// We are using Velocity template, please check its document: http://velocity.apache.org/engine/devel/user-guide.html');
 			openTemplate(filename);
 		}),
 		vscode.commands.registerCommand('create-file-from-template.editTemplate', async () => {
