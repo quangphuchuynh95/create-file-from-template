@@ -2,7 +2,7 @@
 	"name": "create-file-from-template",
 	"displayName": "File templates",
 	"description": "File templates",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"publisher": "huynh-quang-phuc",
 	"icon": "assets/logo.png",
 	"repository": {

@@ -1,5 +1,6 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
+import { EOL } from 'os';
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -57,9 +58,16 @@ export function activate(context: vscode.ExtensionContext) {
 				path.join(globalStoragePath, chosenFile),
 				'utf-8'
 			);
+			let $injected = null;
+			if (template.includes('$injected') || template.includes('${injected}')) {
+				$injected = await vscode.window.showInputBox({
+					placeHolder: 'Please input $injected variable'
+				});
+			}
 
 			const renderedString = Velocity.render(template, {
 				name,
+				injected: $injected,
 			});
 
 			const extemsion = chosenFile.split('.').slice(1).join('.');
@@ -85,7 +93,11 @@ export function activate(context: vscode.ExtensionContext) {
 				vscode.window.showInformationMessage('Canceled create!');
 				return;
 			}
-			await fs.promises.writeFile(globalStoragePath + '/' + filename, '// We are using Velocity template, please check its document: http://velocity.apache.org/engine/devel/user-guide.html');
+			let demoContent = '// We are using Velocity template, please check its document: http://velocity.apache.org/engine/devel/user-guide.html' + EOL;
+			demoContent += '$name is the file name' + EOL;
+			demoContent += '$injected is the second input, we will ask it when you have it in template' + EOL;
+
+			await fs.promises.writeFile(globalStoragePath + '/' + filename, demoContent);
 			openTemplate(filename);
 		}),
 		vscode.commands.registerCommand('create-file-from-template.editTemplate', async () => {
